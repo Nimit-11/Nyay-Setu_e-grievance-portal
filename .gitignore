@@ -1,0 +1,17 @@
+```text
+# Prerequisite files
+.DS_Store
+Thumbs.db
+
+# Sensitive local credentials
+backend/.env
+
+# Python build artifacts and environments
+backend/__pycache__/
+backend/venv/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Frontend Node modules and builds
+frontend/node_modules/
+frontend/dist/
