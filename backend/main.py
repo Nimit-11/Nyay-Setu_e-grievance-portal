@@ -6,7 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
+from database import engine, Base
+import models
 from routes import router
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Nyay Setu — Grievance Management Portal API",
@@ -21,13 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-from fastapi.staticfiles import StaticFiles
-
-# Ensure uploads directory exists
-os.makedirs("uploads", exist_ok=True)
-
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(router)
 

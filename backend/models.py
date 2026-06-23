@@ -1,45 +1,21 @@
-from typing import Literal, Optional
+from sqlalchemy import Column, String, Text, LargeBinary, JSON
+from sqlalchemy.ext.mutable import MutableDict
+from database import Base
 
-from pydantic import BaseModel
+class DBComplaint(Base):
+    __tablename__ = "complaints"
 
-
-class GrievanceSchema(BaseModel):
-    victim_name: Optional[str] = None
-    home_address: Optional[str] = None
-    summary: str
-    category: Literal["Violence / Atrocity", "Land / Property", "Service / Employment", "Civic / Infrastructure", "Social / Welfare", "Other"]
-    severity: Literal["Low", "Medium", "High", "Critical"]
-
-
-class ComplaintRecord(GrievanceSchema):
-    id: str
-    raw_input: str
-    status: Literal["Submitted", "Reviewed", "Assigned", "Resolved"] = "Submitted"
-    input_mode: str
-    created_at: str
-
-
-class SubmitRequest(BaseModel):
-    text: Optional[str] = None
-    input_mode: Literal["text", "voice", "document"]
-
-
-class AdminUpdateRequest(BaseModel):
-    victim_name: Optional[str] = None
-    home_address: Optional[str] = None
-    summary: Optional[str] = None
-    category: Optional[Literal["Violence / Atrocity", "Land / Property", "Service / Employment", "Civic / Infrastructure", "Social / Welfare", "Other"]] = None
-    severity: Optional[Literal["Low", "Medium", "High", "Critical"]] = None
-    status: Optional[Literal["Submitted", "Reviewed", "Assigned", "Resolved"]] = None
-
-
-class TrackingResponse(BaseModel):
-    id: str
-    status: str
-    summary: str
-    status_timestamps: dict[str, str] = {}
-
-
-class SubmitResponse(BaseModel):
-    id: str
-    message: str
+    id = Column(String, primary_key=True, index=True)
+    raw_input = Column(Text)
+    input_mode = Column(String)
+    file_url = Column(String, nullable=True)
+    file_bytes = Column(LargeBinary, nullable=True)
+    file_mime_type = Column(String, nullable=True)
+    created_at = Column(String)
+    status = Column(String)
+    victim_name = Column(String, nullable=True)
+    home_address = Column(String, nullable=True)
+    summary = Column(Text)
+    category = Column(String)
+    severity = Column(String)
+    status_timestamps = Column(MutableDict.as_mutable(JSON), default={})
