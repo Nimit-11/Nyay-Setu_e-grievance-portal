@@ -12,6 +12,9 @@ backend/venv/
 backend/uploads/*
 !backend/uploads/.gitkeep
 
+# Local SQLite Databases
+backend/*.db
+
 # Frontend Node modules and builds
 frontend/node_modules/
 frontend/dist/
