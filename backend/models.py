@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Text, LargeBinary, JSON
 from sqlalchemy.ext.mutable import MutableDict
-from database import Basedsfsd
+from database import Base
 
 class DBComplaint(Base):
     __tablename__ = "complaints"
