@@ -9,8 +9,6 @@ class DBComplaint(Base):
     raw_input = Column(Text)
     input_mode = Column(String)
     file_url = Column(String, nullable=True)
-    file_bytes = Column(LargeBinary, nullable=True)
-    file_mime_type = Column(String, nullable=True)
     created_at = Column(String)
     status = Column(String)
     victim_name = Column(String, nullable=True)

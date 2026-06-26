@@ -26,6 +26,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi.staticfiles import StaticFiles
+
+# Ensure the stored_media directory exists
+os.makedirs("stored_media", exist_ok=True)
+
+app.mount("/static", StaticFiles(directory="stored_media"), name="static")
+
 app.include_router(router)
 
 
