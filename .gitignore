@@ -1,4 +1,3 @@
-```text
 # Prerequisite files
 .DS_Store
 Thumbs.db
@@ -9,8 +8,10 @@ backend/.env
 # Python build artifacts and environments
 backend/__pycache__/
 backend/venv/
-backend/uploads/*
-!backend/uploads/.gitkeep
+backend/pyvenv.cfg
+
+# Mentor-suggested physical media storage (Ignores all citizen uploads)
+backend/stored_media/
 
 # Local SQLite Databases
 backend/*.db

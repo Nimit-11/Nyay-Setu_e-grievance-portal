@@ -28,8 +28,6 @@ async def submit_complaint(
 ):
     complaint_id = generate_id()
     
-    file_bytes_data = None
-    file_mime_type_data = None
     file_url = None
 
     if input_mode == "text":
@@ -43,8 +41,15 @@ async def submit_complaint(
         if len(file_bytes_data) == 0:
             raise HTTPException(status_code=400, detail="Audio file is empty.")
         
-        file_mime_type_data = audio_file.content_type or "audio/webm"
-        file_url = f"http://localhost:8000/api/v1/complaints/{complaint_id}/file"
+        ext = "webm"
+        if audio_file.filename and "." in audio_file.filename:
+            ext = audio_file.filename.split(".")[-1]
+        
+        file_path = f"stored_media/{complaint_id}.{ext}"
+        with open(file_path, "wb") as f:
+            f.write(file_bytes_data)
+            
+        file_url = f"http://localhost:8000/static/{complaint_id}.{ext}"
 
         raw_text = await gemini_transcribe(file_bytes_data, audio_file.filename or "audio.webm")
     elif input_mode == "document":
@@ -54,10 +59,18 @@ async def submit_complaint(
         if len(file_bytes_data) == 0:
             raise HTTPException(status_code=400, detail="Document file is empty.")
         
-        file_mime_type_data = document_file.content_type or "image/jpeg"
-        file_url = f"http://localhost:8000/api/v1/complaints/{complaint_id}/file"
+        ext = "jpg"
+        if document_file.filename and "." in document_file.filename:
+            ext = document_file.filename.split(".")[-1]
+            
+        file_path = f"stored_media/{complaint_id}.{ext}"
+        with open(file_path, "wb") as f:
+            f.write(file_bytes_data)
+            
+        file_url = f"http://localhost:8000/static/{complaint_id}.{ext}"
+        mime_type = document_file.content_type or "image/jpeg"
 
-        raw_text = await gemini_vision_ocr(file_bytes_data, file_mime_type_data)
+        raw_text = await gemini_vision_ocr(file_bytes_data, mime_type)
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported input_mode: {input_mode}")
 
@@ -68,8 +81,6 @@ async def submit_complaint(
         raw_input=raw_text,
         input_mode=input_mode,
         file_url=file_url,
-        file_bytes=file_bytes_data,
-        file_mime_type=file_mime_type_data,
         created_at=datetime.now().isoformat(),
         status="Submitted",
         victim_name=structured.get("victim_name"),
@@ -156,10 +167,4 @@ async def track_complaint(complaint_id: str, db: Session = Depends(get_db)):
         status_timestamps=record.status_timestamps or {},
     )
 
-@router.get("/{complaint_id}/file")
-async def get_complaint_file(complaint_id: str, db: Session = Depends(get_db)):
-    record = db.query(DBComplaint).filter(DBComplaint.id == complaint_id).first()
-    if not record or not record.file_bytes:
-        raise HTTPException(status_code=404, detail=f"File not found for complaint {complaint_id}.")
-    
-    return Response(content=record.file_bytes, media_type=record.file_mime_type)
+
