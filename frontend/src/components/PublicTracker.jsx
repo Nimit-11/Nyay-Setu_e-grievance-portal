@@ -36,6 +36,26 @@ export default function PublicTracker() {
 
   const currentStepIndex = trackResult ? STEPS.indexOf(trackResult.status) : -1;
 
+  const timelineDates = {};
+  if (trackResult) {
+    let currentKnown = trackResult.created_at;
+    if (currentStepIndex >= 0) {
+      currentKnown = trackResult.status_timestamps && trackResult.status_timestamps[STEPS[currentStepIndex]] 
+        ? trackResult.status_timestamps[STEPS[currentStepIndex]]
+        : trackResult.created_at;
+      
+      for (let i = currentStepIndex; i >= 0; i--) {
+        const step = STEPS[i];
+        if (trackResult.status_timestamps && trackResult.status_timestamps[step]) {
+          timelineDates[step] = trackResult.status_timestamps[step];
+          currentKnown = trackResult.status_timestamps[step];
+        } else {
+          timelineDates[step] = currentKnown;
+        }
+      }
+    }
+  }
+
   return (
     <section className="animate-fade-in">
       <div className="max-w-2xl mx-auto">
@@ -136,9 +156,9 @@ export default function PublicTracker() {
                       }`}>
                         {step}
                       </p>
-                      {trackResult.status_timestamps && trackResult.status_timestamps[step] && (
+                      {timelineDates[step] && (
                         <p className="text-[10px] text-slate-400 mt-0.5 font-mono text-center">
-                          {formatDateSmall(trackResult.status_timestamps[step])}
+                          {formatDateSmall(timelineDates[step])}
                         </p>
                       )}
                     </div>

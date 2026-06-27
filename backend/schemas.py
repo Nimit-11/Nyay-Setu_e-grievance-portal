@@ -15,6 +15,7 @@ class ComplaintRecord(GrievanceSchema):
     id: str
     raw_input: str
     status: Literal["Submitted", "Reviewed", "Assigned", "Resolved"] = "Submitted"
+    internal_status: str = "Submitted"
     input_mode: str
     created_at: str
 
@@ -31,12 +32,15 @@ class AdminUpdateRequest(BaseModel):
     category: Optional[Literal["Violence / Atrocity", "Land / Property", "Service / Employment", "Civic / Infrastructure", "Social / Welfare", "Other"]] = None
     severity: Optional[Literal["Low", "Medium", "High", "Critical"]] = None
     status: Optional[Literal["Submitted", "Reviewed", "Assigned", "Resolved"]] = None
+    internal_status: Optional[Literal["Submitted", "Desk_Reviewed", "Jurisdiction_Routed", "Police_Dispatched", "Field_Investigating", "Resolved"]] = None
 
 
 class TrackingResponse(BaseModel):
     id: str
     status: str
+    internal_status: str = "Submitted"
     summary: str
+    created_at: str
     status_timestamps: dict[str, str] = {}
 
 

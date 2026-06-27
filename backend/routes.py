@@ -83,6 +83,7 @@ async def submit_complaint(
         file_url=file_url,
         created_at=datetime.now().isoformat(),
         status="Submitted",
+        internal_status="Submitted",
         victim_name=structured.get("victim_name"),
         home_address=structured.get("home_address"),
         summary=structured.get("summary"),
@@ -112,6 +113,7 @@ async def list_complaints(db: Session = Depends(get_db)):
             "file_url": c.file_url,
             "created_at": c.created_at,
             "status": c.status,
+            "internal_status": c.internal_status,
             "victim_name": c.victim_name,
             "home_address": c.home_address,
             "summary": c.summary,
@@ -128,13 +130,39 @@ async def update_complaint(complaint_id: str, update: AdminUpdateRequest, db: Se
     if not record:
         raise HTTPException(status_code=404, detail=f"Complaint {complaint_id} not found.")
 
+    internal_to_public = {
+        "Submitted": "Submitted",
+        "Desk_Reviewed": "Submitted",
+        "Jurisdiction_Routed": "Reviewed",
+        "Police_Dispatched": "Assigned",
+        "Field_Investigating": "Assigned",
+        "Resolved": "Resolved"
+    }
+
     update_data = update.model_dump(exclude_none=True)
+    
+    if "internal_status" in update_data:
+        val = update_data["internal_status"]
+        if record.internal_status != val:
+            ts = dict(record.status_timestamps or {})
+            ts[val] = datetime.now().isoformat()
+            
+            record.internal_status = val
+            new_public_status = internal_to_public.get(val, record.status)
+            if new_public_status != record.status:
+                ts[new_public_status] = ts[val]
+            record.status = new_public_status
+            record.status_timestamps = ts
+            
+            update_data.pop("status", None)
+
     for field, value in update_data.items():
         if field == "status" and record.status != value:
-            if record.status_timestamps is None:
-                record.status_timestamps = {}
-            record.status_timestamps[value] = datetime.now().isoformat()
-        setattr(record, field, value)
+            ts = dict(record.status_timestamps or {})
+            ts[value] = datetime.now().isoformat()
+            record.status_timestamps = ts
+        if field != "internal_status":
+            setattr(record, field, value)
     
     db.commit()
     db.refresh(record)
@@ -146,6 +174,7 @@ async def update_complaint(complaint_id: str, update: AdminUpdateRequest, db: Se
         "file_url": record.file_url,
         "created_at": record.created_at,
         "status": record.status,
+        "internal_status": record.internal_status,
         "victim_name": record.victim_name,
         "home_address": record.home_address,
         "summary": record.summary,
@@ -163,7 +192,9 @@ async def track_complaint(complaint_id: str, db: Session = Depends(get_db)):
     return TrackingResponse(
         id=record.id,
         status=record.status,
+        internal_status=record.internal_status,
         summary=record.summary,
+        created_at=record.created_at,
         status_timestamps=record.status_timestamps or {},
     )
 
