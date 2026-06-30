@@ -11,6 +11,7 @@ class DBComplaint(Base):
     file_url = Column(String, nullable=True)
     created_at = Column(String)
     status = Column(String)
+    internal_status = Column(String, default="Submitted")
     victim_name = Column(String, nullable=True)
     home_address = Column(String, nullable=True)
     summary = Column(Text)

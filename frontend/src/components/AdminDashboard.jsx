@@ -35,7 +35,113 @@ const MODE_ICONS = {
 
 const CATEGORIES = ['Violence / Atrocity', 'Land / Property', 'Service / Employment', 'Civic / Infrastructure', 'Social / Welfare', 'Other'];
 const SEVERITIES = ['Low', 'Medium', 'High', 'Critical'];
-const STATUSES = ['Submitted', 'Reviewed', 'Assigned', 'Resolved'];
+
+const INTERNAL_STATUSES = [
+  { key: 'Submitted', label: 'Ingested & AI Structured' },
+  { key: 'Desk_Reviewed', label: 'NCSC Desk Review' },
+  { key: 'Jurisdiction_Routed', label: 'Regional Jurisdiction Routing' },
+  { key: 'Police_Dispatched', label: 'Dispatched to Local Police Desk' },
+  { key: 'Field_Investigating', label: 'Active Field Investigation' },
+  { key: 'Resolved', label: 'Final Resolution & Audit Closure' }
+];
+
+const INTERNAL_STATUS_LABELS = {
+  'Submitted': 'Submitted',
+  'Desk_Reviewed': 'Desk Reviewed',
+  'Jurisdiction_Routed': 'Jurisdiction Routed',
+  'Police_Dispatched': 'Police Dispatched',
+  'Field_Investigating': 'Field Investigation Active',
+  'Resolved': 'Resolved'
+};
+
+const STATUSES = ['Submitted', 'Desk_Reviewed', 'Jurisdiction_Routed', 'Police_Dispatched', 'Field_Investigating', 'Resolved'];
+
+const VerticalTracker = ({ complaint }) => {
+  const currentStatusIndex = INTERNAL_STATUSES.findIndex(s => s.key === complaint.internal_status);
+  
+  const timelineDates = {};
+  let currentKnown = complaint.created_at;
+  
+  if (currentStatusIndex >= 0) {
+    currentKnown = complaint.status_timestamps && complaint.status_timestamps[INTERNAL_STATUSES[currentStatusIndex].key] 
+      ? complaint.status_timestamps[INTERNAL_STATUSES[currentStatusIndex].key]
+      : complaint.created_at;
+      
+    for (let i = currentStatusIndex; i >= 0; i--) {
+      const statusKey = INTERNAL_STATUSES[i].key;
+      if (complaint.status_timestamps && complaint.status_timestamps[statusKey]) {
+        timelineDates[statusKey] = complaint.status_timestamps[statusKey];
+        currentKnown = complaint.status_timestamps[statusKey];
+      } else {
+        timelineDates[statusKey] = currentKnown;
+      }
+    }
+  }
+
+  return (
+    <div className="relative pl-2 py-2 space-y-6">
+      {INTERNAL_STATUSES.map((status, idx) => {
+        const isCompleted = idx < currentStatusIndex;
+        const isActive = idx === currentStatusIndex;
+        const isUpcoming = idx > currentStatusIndex;
+        
+        let nodeColor = 'bg-slate-200 border-slate-300';
+        let lineColor = 'border-slate-200';
+        let dateText = '';
+
+        if (!isUpcoming) {
+          const stepDateStr = timelineDates[status.key];
+          const prevDateStr = idx === 0 ? complaint.created_at : timelineDates[INTERNAL_STATUSES[idx-1].key];
+          
+          const stepDate = new Date(stepDateStr);
+          const prevDate = new Date(prevDateStr);
+          
+          const diffTime = Math.abs(stepDate - prevDate);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          const formattedDate = `${String(stepDate.getDate()).padStart(2, '0')}/${String(stepDate.getMonth() + 1).padStart(2, '0')}/${stepDate.getFullYear()}`;
+          dateText = `Completed on: ${formattedDate}`;
+
+          if (diffDays <= 2) {
+            nodeColor = 'bg-emerald-500 border-emerald-600';
+            lineColor = 'border-emerald-500';
+          } else if (diffDays <= 6) {
+            nodeColor = 'bg-amber-500 border-amber-600';
+            lineColor = 'border-amber-500';
+          } else {
+            nodeColor = 'bg-red-600 border-red-700';
+            lineColor = 'border-red-600';
+          }
+        }
+
+        return (
+          <div key={status.key} className="relative">
+            {idx < INTERNAL_STATUSES.length - 1 && (
+              <div className={`absolute left-2.5 top-6 bottom-[-24px] w-0.5 border-l-2 ${lineColor}`}></div>
+            )}
+            <div className="flex items-start gap-3">
+              <div className={`relative z-10 w-5 h-5 rounded-full border-2 ${nodeColor} mt-0.5 shadow-sm flex-shrink-0 flex items-center justify-center`}>
+                {!isUpcoming && (
+                  <svg className="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <div>
+                <h4 className={`text-sm font-semibold ${isUpcoming ? 'text-slate-400' : 'text-slate-900'}`}>
+                  {status.label}
+                </h4>
+                {!isUpcoming && (
+                  <p className="text-xs text-slate-500 mt-1">{dateText}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function AdminDashboard() {
   const [complaints, setComplaints] = useState([]);
@@ -55,7 +161,7 @@ export default function AdminDashboard() {
     const year = date.getFullYear();
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `Date: ${day}-${month}-${year} Time: ${hours}:${minutes}`;
+    return `${day}/${month}/${year} | ${hours}:${minutes}`;
   };
 
   const handleViewOriginal = () => {
@@ -91,7 +197,7 @@ export default function AdminDashboard() {
       summary: complaint.summary || '',
       category: complaint.category || 'Other',
       severity: complaint.severity || 'Low',
-      status: complaint.status || 'Submitted',
+      internal_status: complaint.internal_status || 'Submitted',
     });
     setSaveSuccess(false);
   };
@@ -120,10 +226,10 @@ export default function AdminDashboard() {
     setApproving(true);
     setSaveSuccess(false);
     try {
-      const approveData = { ...editForm, status: 'Reviewed' };
+      const approveData = { ...editForm, internal_status: 'Desk_Reviewed' };
       const updated = await updateComplaint(selected.id, approveData);
       setSelected(updated);
-      setEditForm({ ...editForm, status: 'Reviewed' });
+      setEditForm({ ...editForm, internal_status: 'Desk_Reviewed' });
       setComplaints((prev) =>
         prev.map((c) => (c.id === updated.id ? updated : c))
       );
@@ -209,38 +315,45 @@ export default function AdminDashboard() {
 
           <div className="lg:col-span-9">
             {selected ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="card-elevated overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="card-elevated overflow-hidden lg:col-span-7 flex flex-col">
                   <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <h3 className="text-sm font-semibold text-slate-700">Raw Citizen Input</h3>
-                    </div>
-                    <button onClick={handleViewOriginal} className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                      View Original Complaint
-                    </button>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex flex-wrap items-center gap-2 mb-4">
-                      <span className="badge text-xs bg-slate-900 text-white">{selected.id}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="badge text-xs bg-slate-900 text-white font-mono">{selected.id}</span>
                       <span className="badge text-xs bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                         {MODE_ICONS[selected.input_mode]}
                         {selected.input_mode}
                       </span>
-                      <span className="badge text-xs bg-slate-100 text-slate-500">{formatDate(selected.created_at)}</span>
+                      <span className="badge text-xs bg-slate-100 text-slate-500 font-mono">{formatDate(selected.created_at)}</span>
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{selected.raw_input}</p>
+                    <button onClick={handleViewOriginal} className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      Original
+                    </button>
+                  </div>
+                  <div className="p-0 flex-1">
+                    <div className="flex flex-col md:flex-row h-full">
+                      <div className="w-full md:w-[40%] p-5 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-50/50">
+                        <VerticalTracker complaint={selected} />
+                      </div>
+                      <div className="w-full md:w-[60%] p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <h3 className="text-sm font-semibold text-slate-700">Raw Citizen Input</h3>
+                        </div>
+                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 max-h-[500px] overflow-y-auto">
+                          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{selected.raw_input}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="card-elevated overflow-hidden">
+                <div className="card-elevated overflow-hidden lg:col-span-5 flex flex-col">
                   <div className="px-5 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -322,16 +435,16 @@ export default function AdminDashboard() {
                       <select
                         id="edit-status"
                         className="input-field text-sm"
-                        value={editForm.status}
-                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                        value={editForm.internal_status}
+                        onChange={(e) => setEditForm({ ...editForm, internal_status: e.target.value })}
                       >
                         {STATUSES.map((s) => (
-                          <option key={s} value={s}>{s}</option>
+                          <option key={s} value={s}>{INTERNAL_STATUS_LABELS[s]}</option>
                         ))}
                       </select>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 pt-2">
-                      {selected.status === 'Submitted' && (
+                      {selected.internal_status === 'Submitted' && (
                         <button
                           onClick={handleApprove}
                           disabled={approving}
