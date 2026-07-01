@@ -49,7 +49,7 @@ async def gemini_transcribe(audio_bytes: bytes, filename: str = "audio.webm") ->
             model="gemini-2.5-flash",
             contents=[
                 uploaded_file,
-                "Transcribe this audio perfectly. If it is in a regional Indian language, transcribe it exactly in that language. Provide ONLY the transcription text without any markdown or quotes.",
+                "Transcribe this audio perfectly. If it is in a regional Indian language, transcribe it exactly in that language. If the audio contains no speech, output 'No speech detected.' Provide ONLY the transcription text without any markdown or quotes.",
             ]
         )
         await client.aio.files.delete(name=uploaded_file.name)

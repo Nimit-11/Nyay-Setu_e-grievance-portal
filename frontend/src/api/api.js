@@ -12,6 +12,24 @@ export async function submitComplaint(formData) {
   return response.json();
 }
 
+export async function getGroupedComplaints() {
+  const response = await fetch(`${BASE_URL}/grouped`);
+  if (!response.ok) throw new Error('Failed to fetch grouped complaints');
+  return response.json();
+}
+
+export async function submitNudge(complaintId) {
+  const response = await fetch(`${BASE_URL}/${complaintId}/nudge`, { method: 'POST' });
+  if (!response.ok) throw new Error('Failed to submit nudge');
+  return response.json();
+}
+
+export async function getCitizenProfile(aadhaar) {
+  const response = await fetch(`${BASE_URL}/citizen/${aadhaar}`);
+  if (!response.ok) throw new Error('Failed to fetch citizen profile');
+  return response.json();
+}
+
 export async function fetchComplaints() {
   const response = await fetch(`${BASE_URL}/`);
   if (!response.ok) throw new Error('Failed to fetch complaints');
