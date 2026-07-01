@@ -199,6 +199,7 @@ export default function AdminDashboard() {
       });
 
       setCitizens(activeCitizens);
+      return activeCitizens;
     } catch (err) {
       console.error('Failed to load grouped complaints:', err);
     } finally {
@@ -234,13 +235,26 @@ export default function AdminDashboard() {
     setSaving(true);
     setSaveSuccess(false);
     try {
-      const updated = await updateComplaint(selected.id, editForm);
+      await updateComplaint(selected.id, editForm);
       // Because we modified citizen phone and complaint info, reloading is safest
-      await loadData();
+      const updatedCitizens = await loadData();
       
-      // Update local active state explicitly just in case
-      setSelected((prev) => ({ ...prev, ...editForm }));
-      setActiveCitizen((prev) => ({ ...prev, mobile_number: editForm.phone_number }));
+      if (updatedCitizens) {
+        let found = false;
+        for (const cit of updatedCitizens) {
+          const comp = cit.complaints.find(c => c.id === selected.id);
+          if (comp) {
+            setSelected(comp);
+            setActiveCitizen(cit);
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          setSelected((prev) => ({ ...prev, ...editForm }));
+          setActiveCitizen((prev) => ({ ...prev, mobile_number: editForm.phone_number }));
+        }
+      }
       
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -259,10 +273,25 @@ export default function AdminDashboard() {
       const approveData = { ...editForm, internal_status: 'Desk_Reviewed' };
       await updateComplaint(selected.id, approveData);
       
-      await loadData();
+      const updatedCitizens = await loadData();
       
-      setSelected((prev) => ({ ...prev, ...approveData }));
-      setEditForm({ ...editForm, internal_status: 'Desk_Reviewed' });
+      if (updatedCitizens) {
+        let found = false;
+        for (const cit of updatedCitizens) {
+          const comp = cit.complaints.find(c => c.id === selected.id);
+          if (comp) {
+            setSelected(comp);
+            setActiveCitizen(cit);
+            setEditForm({ ...editForm, internal_status: 'Desk_Reviewed' });
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          setSelected((prev) => ({ ...prev, ...approveData }));
+          setEditForm({ ...editForm, internal_status: 'Desk_Reviewed' });
+        }
+      }
       
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);

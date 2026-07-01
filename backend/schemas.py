@@ -20,6 +20,7 @@ class ComplaintRecord(GrievanceSchema):
     internal_status: str = "Submitted"
     input_mode: str
     created_at: str
+    status_timestamps: dict[str, str] = {}
     nudge_timestamps: list[str] = []
 
 
