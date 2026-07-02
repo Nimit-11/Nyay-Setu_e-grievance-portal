@@ -30,6 +30,12 @@ export async function getCitizenProfile(aadhaar) {
   return response.json();
 }
 
+export async function getCitizenByPhone(phone) {
+  const response = await fetch(`${BASE_URL}/citizen/phone/${phone}`);
+  if (!response.ok) throw new Error('Failed to fetch citizen by phone');
+  return response.json();
+}
+
 export async function fetchComplaints() {
   const response = await fetch(`${BASE_URL}/`);
   if (!response.ok) throw new Error('Failed to fetch complaints');
