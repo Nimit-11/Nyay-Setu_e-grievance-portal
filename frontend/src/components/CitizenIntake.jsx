@@ -402,11 +402,11 @@ export default function CitizenIntake() {
     return (
       <section className="animate-fade-in max-w-4xl mx-auto">
         {nudgeToast && (
-          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <div className="absolute top-4 right-4 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-slide-in">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            <span className="text-sm font-medium tracking-wide">Nudge logged successfully. Administration notified.</span>
+            <span className="text-sm font-medium tracking-wide">Update request logged successfully. Administration notified.</span>
           </div>
         )}
         
@@ -426,14 +426,14 @@ export default function CitizenIntake() {
                 <p className="text-slate-700 text-sm line-clamp-2 mb-4">{c.summary || c.raw_input}</p>
               </div>
               
-              {/* Option Element 1: The Nudge Action */}
-              <div className="pt-4 border-t border-slate-100 mt-2">
-                <p className="text-xs text-slate-500 mb-3">Do you have a question or an updates query regarding this active issue?</p>
+              {/* Option Element 1: The Update Request Action */}
+              <div className="p-4 bg-white border border-slate-100 flex flex-col justify-between">
+                <p className="text-xs text-slate-500 mb-3">Has the severity increased or resolution stalled? Notify the administration immediately.</p>
                 <button onClick={() => handleNudge(c.id)} className="w-full py-2 px-4 rounded-xl border-2 border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 font-semibold text-sm transition-colors flex items-center justify-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  Send Urgent Status Nudge
+                  Send Update Request
                 </button>
               </div>
             </div>

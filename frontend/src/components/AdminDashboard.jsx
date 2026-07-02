@@ -440,16 +440,16 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     
-                    {/* Historic Nudge Log Card */}
+                    {/* Historic Update Request Log Card */}
                     <div className="p-5 border-t border-slate-200 bg-blue-50/30">
-                      <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <h4 className="font-semibold text-slate-800 flex items-center gap-2 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-                        Historic Nudge Log
+                        Historic Update Request Log
                       </h4>
                       {(!selected.nudge_timestamps || selected.nudge_timestamps.length === 0) ? (
-                        <p className="text-xs text-slate-500 italic">No urgent nudges received from the citizen.</p>
+                        <p className="text-xs text-slate-500 italic">No update requests received from the citizen.</p>
                       ) : (
                         <ul className="space-y-2 max-h-[120px] overflow-y-auto pl-1">
                           {selected.nudge_timestamps.map((nudge_str, idx) => {
@@ -461,7 +461,7 @@ export default function AdminDashboard() {
                             return (
                               <li key={idx} className="text-xs text-slate-700 font-medium flex items-center flex-wrap gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-orange-400 block shrink-0"></span>
-                                <span>Nudge received on: <span className="font-bold text-slate-900">{date}</span></span>
+                                <span>Update request received on: <span className="font-bold text-slate-900">{date}</span></span>
                                 {state && (
                                   <>
                                     <span className="text-slate-300">|</span>
