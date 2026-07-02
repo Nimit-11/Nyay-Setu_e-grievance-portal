@@ -1,10 +1,12 @@
 import json
 import os
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
 # Initialize the new Gemini client (reads GEMINI_API_KEY from env)
-client = genai.Client()
+load_dotenv(override=True)
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 STRUCTURING_SYSTEM_PROMPT = """You are an AI assistant for the Nyay Setu grievance management portal.
 Your task is to analyze a citizen's grievance narrative and extract structured information.
@@ -47,7 +49,7 @@ async def gemini_transcribe(audio_bytes: bytes, filename: str = "audio.webm") ->
             model="gemini-2.5-flash",
             contents=[
                 uploaded_file,
-                "Transcribe this audio perfectly. If it is in a regional Indian language, transcribe it exactly in that language. Provide ONLY the transcription text without any markdown or quotes.",
+                "Transcribe this audio perfectly. If it is in a regional Indian language, transcribe it exactly in that language. If the audio contains no speech, output 'No speech detected.' Provide ONLY the transcription text without any markdown or quotes.",
             ]
         )
         await client.aio.files.delete(name=uploaded_file.name)
@@ -95,6 +97,7 @@ async def call_gemini_with_retry(model, contents, config=None, max_retries=3):
                 return await client.aio.models.generate_content(model=model, contents=contents, config=config)
             return await client.aio.models.generate_content(model=model, contents=contents)
         except Exception as e:
+            print(f"Error calling Gemini API: {e}")
             if attempt == max_retries - 1:
                 raise
             if "503" in str(e) or "Unavailable" in str(e) or "500" in str(e):
