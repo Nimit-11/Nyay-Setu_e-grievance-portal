@@ -5,6 +5,9 @@ Thumbs.db
 # Sensitive local credentials
 backend/.env
 
+#Dummy data for citizen_db
+backend/seed_db.py
+
 # Python build artifacts and environments
 backend/__pycache__/
 backend/venv/
