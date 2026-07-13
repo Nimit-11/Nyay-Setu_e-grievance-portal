@@ -5,6 +5,9 @@ Thumbs.db
 # Sensitive local credentials
 backend/.env
 
+#Dummy data for citizen_db
+backend/seed_db.py
+
 # Python build artifacts and environments
 backend/__pycache__/
 backend/venv/
@@ -20,4 +23,3 @@ backend/*.db
 frontend/node_modules/
 frontend/dist/
 PROJECT_STATE.md
-backend/mock_pipelines.py

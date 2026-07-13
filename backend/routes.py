@@ -245,3 +245,37 @@ async def get_citizen(aadhaar_no: str, db: Session = Depends(get_db)):
         home_address=cit.home_address,
         complaints=complaints
     )
+
+@router.get("/citizen/phone/{phone_number}", response_model=CitizenResponse)
+async def get_citizen_by_phone(phone_number: str, db: Session = Depends(get_db)):
+    cit = db.query(DBCitizen).filter(DBCitizen.mobile_number == phone_number).first()
+    if not cit:
+        raise HTTPException(status_code=404, detail="Citizen not found with this phone number.")
+    
+    complaints = []
+    for c in cit.complaints:
+        complaints.append({
+            "id": c.id,
+            "aadhaar_no": c.aadhaar_no,
+            "raw_input": c.raw_input,
+            "file_url": c.file_url,
+            "input_mode": c.input_mode,
+            "created_at": c.created_at,
+            "status": c.status,
+            "internal_status": c.internal_status,
+            "victim_name": c.victim_name,
+            "home_address": c.home_address,
+            "summary": c.summary,
+            "category": c.category,
+            "severity": c.severity,
+            "status_timestamps": c.status_timestamps or {},
+            "nudge_timestamps": c.nudge_timestamps or [],
+        })
+    
+    return CitizenResponse(
+        aadhaar_no=cit.aadhaar_no,
+        name=cit.name,
+        mobile_number=cit.mobile_number,
+        home_address=cit.home_address,
+        complaints=complaints
+    )

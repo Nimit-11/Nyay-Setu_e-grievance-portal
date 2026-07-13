@@ -27,6 +27,16 @@ Citizens can simply speak, type, or upload an image of their grievance in their 
 
 ---
 
+## 🆕 Recent Enhancements
+
+* **Phone Number & Prototype OTP Authentication**: Citizens can now authenticate using either their Aadhaar ID or a registered Phone Number. Phone login features a modern, auto-advancing 4-digit OTP verification prototype with an active 30-second countdown timer.
+* **Intelligent Admin Directory Sorting**: The Admin Dashboard automatically sorts citizens chronologically based on their most recently filed complaints, bubbling urgent and new cases to the top of the workspace.
+* **Contextual Nudge Logging**: When a citizen sends an "Urgent Status Nudge" from the portal, the system snapshots the exact state of the complaint at that moment and logs it in the Admin's "Historic Nudge Log" for better accountability.
+* **Aadhaar Privacy Masking**: Aadhaar numbers are now automatically masked (e.g., `XXXX-XXXX-1234`) across the frontend UI to ensure data privacy while maintaining verifiable identity links.
+* **SLA Timestamp Resolution Fix**: Resolved complex React state merging and FastAPI Pydantic serialization bugs to ensure that the vertical SLA step tracker accurately reflects real-time status changes down to the microsecond.
+
+---
+
 ## 🧠 Architecture & Technical Workflow
 
 The application leverages a real-time data flow linking the citizen's raw input directly to the administrative database via AI structuring:
@@ -106,6 +116,9 @@ The backend provides a clean RESTful routing architecture for managing grievance
 | HTTP Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/v1/complaints/submit` | Handles multimodal ingestion (text, voice, document uploads) |
-| `GET` | `/api/v1/complaints/` | Fetches all active cases for the Admin Dashboard |
+| `GET` | `/api/v1/complaints/grouped` | Fetches all active cases grouped by citizen for the Admin Dashboard |
+| `GET` | `/api/v1/complaints/citizen/{aadhaar}` | Authenticates and retrieves a citizen's profile and complaints using Aadhaar |
+| `GET` | `/api/v1/complaints/citizen/phone/{phone}` | Authenticates and retrieves a citizen's profile using Mobile Number |
 | `PUT` | `/api/v1/complaints/{id}` | Updates case state, overrides AI extraction, and triggers timestamp tracking |
 | `GET` | `/api/v1/complaints/{id}/status` | Exposes public verification tracking timeline |
+| `POST` | `/api/v1/complaints/{id}/nudge` | Logs an urgent status nudge with contextual state tracking |
